@@ -1,6 +1,6 @@
 # LLM Learning
 
-A hands-on learning project that progressively builds chatbots and NLP tools -- from simple rule-based bots all the way to running a real LLM locally. Each folder represents a step up in complexity.
+A hands-on learning project that progressively builds chatbots and NLP tools -- from simple rule-based bots all the way to running a real LLM locally. Each folder represents a step up in complexity. Built as part of an AI course by [Practical DevSecOps](https://www.practical-devsecops.com/).
 
 ## Learning Path
 
@@ -12,6 +12,8 @@ The projects are ordered from simplest to most advanced:
 | 2 | `chatbot/` | Neural network (CNN, Bi-LSTM) | Intent classification with TensorFlow |
 | 3 | `llm-chatbot/` | Pre-trained LLM (TinyLlama 1.1B) | Text generation with Hugging Face Transformers |
 | 4 | `llm-summarizer/` | Pre-trained LLM (Falconsai T5) | Summarization pipeline, file/URL input |
+| 5 | `llm-chatbot-rag/` | RAG with Phi-3-mini + FAISS | Retrieval-Augmented Generation over local documents |
+| 6 | `sentiment_attack/` | Adversarial ML (TextAttack + DistilBERT) | Adversarial text attacks on sentiment classifiers |
 
 ---
 
@@ -137,6 +139,69 @@ python3 new-llm-summarizer.py
 Type or paste text to summarize. In the enhanced version, provide a `file:///path/to/file.txt` or `https://example.com/article` to summarize content from that source. Type `X` to exit.
 
 **Requirements:** Python 3.8+, PyTorch, Transformers, ~1 GB disk for the model.
+
+---
+
+## 5. RAG Chatbot (`llm-chatbot-rag/`)
+
+A Retrieval-Augmented Generation chatbot that answers questions using your own documents. Uses [Phi-3-mini-4k-instruct](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct) as the LLM and FAISS for vector similarity search over document chunks.
+
+- **`llm-chatbot-rag.py`** -- Loads text files from `documents/`, splits them into chunks, creates embeddings with `sentence-transformers/all-MiniLM-L6-v2`, stores them in a FAISS index, and retrieves relevant context to augment the LLM prompt.
+- **`documents/`** -- Drop your text files here for the chatbot to use as its knowledge base.
+
+### Run
+
+```bash
+cd llm-chatbot-rag
+
+# Create and activate a virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Add your documents to the documents/ folder, then run
+python3 llm-chatbot-rag.py
+```
+
+Type your question and press Enter. The chatbot retrieves relevant chunks from your documents and uses them as context for the answer. Type `X` to exit.
+
+**Requirements:** Python 3.8+, PyTorch, Transformers, LangChain, FAISS, Sentence-Transformers, ~7 GB disk for the Phi-3-mini model. GPU recommended.
+
+---
+
+## 6. Sentiment Attack (`sentiment_attack/`)
+
+An adversarial ML experiment that uses [TextAttack](https://github.com/QData/TextAttack) to craft adversarial examples against a DistilBERT sentiment classifier (`distilbert-base-uncased-finetuned-sst-2-english`). Demonstrates how small word substitutions can flip a model's prediction.
+
+- **`sentiment_classifier.py`** -- Loads DistilBERT and exposes a `predict_sentiment()` function that returns label, confidence, and class probabilities.
+- **`test_sentiment.py`** -- Runs the classifier on a set of sample texts to verify it works correctly.
+- **`textattack_wrapper.py`** -- Wraps the sentiment classifier in TextAttack's `ModelWrapper` interface so it can be used as an attack target.
+- **`run_attack.py`** -- Runs the TextFooler attack recipe on 20 examples, prints detailed results (original vs. perturbed text, confidence changes, word modification rates), and saves a summary to `attack_summary.txt` and `attack_results.csv`.
+
+### Run
+
+```bash
+cd sentiment_attack
+
+# Create and activate a virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Test the sentiment classifier
+python3 test_sentiment.py
+
+# Run the adversarial attack
+python3 run_attack.py
+```
+
+Results are printed to the terminal and saved to `attack_summary.txt`. The attack shows how synonym substitutions (e.g., "great" -> "outstanding") can flip sentiment predictions while preserving meaning.
+
+**Requirements:** Python 3.11+, PyTorch, Transformers, TextAttack, TensorFlow, NLTK, scikit-learn (see `requirements.txt`). ~500 MB for the DistilBERT model.
 
 ---
 
